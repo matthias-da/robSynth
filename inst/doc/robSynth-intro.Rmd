@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 
 ```{r install, eval = FALSE}
 # install.packages("remotes")
-remotes::install_github("statistikat/robSynth")
+remotes::install_github("matthias-da/robSynth")
 ```
 
 ## The problem: contamination propagates through synthesis

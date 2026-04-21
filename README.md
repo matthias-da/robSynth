@@ -23,7 +23,7 @@ process, even when the training data are contaminated.
 
 ```r
 # install.packages("remotes")
-remotes::install_github("statistikat/robSynth")
+remotes::install_github("matthias-da/robSynth")
 ```
 
 ## Quick example

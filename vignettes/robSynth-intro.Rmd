@@ -186,7 +186,7 @@ once the companion paper is accepted.
 
 ```{r install, eval = FALSE}
 # install.packages("remotes")
-remotes::install_github("statistikat/robSynth")
+remotes::install_github("matthias-da/robSynth")
 ```
 
 Several methods rely on optional backends listed under **Suggests** in

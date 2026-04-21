@@ -22,6 +22,6 @@ Suggests: partykit, synthpop, ggplot2, gridExtra, riskutility, ranger,
 VignetteBuilder: knitr
 License: GPL (>= 2)
 Encoding: UTF-8
-URL: https://github.com/statistikat/robSynth
-BugReports: https://github.com/statistikat/robSynth/issues
+URL: https://github.com/matthias-da/robSynth
+BugReports: https://github.com/matthias-da/robSynth/issues
 RoxygenNote: 7.3.3

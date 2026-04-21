@@ -14,8 +14,8 @@ logistic regression (categorical).
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/statistikat/robSynth}
-  \item Report bugs at \url{https://github.com/statistikat/robSynth/issues}
+  \item \url{https://github.com/matthias-da/robSynth}
+  \item Report bugs at \url{https://github.com/matthias-da/robSynth/issues}
 }
 
 }
