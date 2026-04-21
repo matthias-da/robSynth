@@ -9,9 +9,9 @@ logistic regression (categorical).
 
 Useful links:
 
-- <https://github.com/statistikat/robSynth>
+- <https://github.com/matthias-da/robSynth>
 
-- Report bugs at <https://github.com/statistikat/robSynth/issues>
+- Report bugs at <https://github.com/matthias-da/robSynth/issues>
 
 ## Author
 

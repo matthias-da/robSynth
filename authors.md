@@ -8,15 +8,15 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/statistikat/robSynth/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/matthias-da/robSynth/blob/main/DESCRIPTION)
 
 Templ M (2026). *robSynth: Robust Synthetic Data Generation*. R package
-version 0.5.0, <https://github.com/statistikat/robSynth>.
+version 0.5.0, <https://github.com/matthias-da/robSynth>.
 
     @Manual{,
       title = {robSynth: Robust Synthetic Data Generation},
       author = {Matthias Templ},
       year = {2026},
       note = {R package version 0.5.0},
-      url = {https://github.com/statistikat/robSynth},
+      url = {https://github.com/matthias-da/robSynth},
     }

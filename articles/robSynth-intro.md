@@ -163,7 +163,7 @@ the companion paper is accepted.
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("statistikat/robSynth")
+remotes::install_github("matthias-da/robSynth")
 ```
 
 Several methods rely on optional backends listed under **Suggests** in
@@ -177,7 +177,7 @@ install.packages(c("partykit", "ranger", "xgboost", "riskutility"))
 ```
 
 The remainder of the vignette assumes you have run
-[`library(robSynth)`](https://github.com/statistikat/robSynth) in your R
+[`library(robSynth)`](https://github.com/matthias-da/robSynth) in your R
 session — the code chunks do so at the start of the worked example.
 Every subsequent example builds on the data frame `df` created in
 Section 4, so it is best to read the sections in order on first pass.
