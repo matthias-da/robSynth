@@ -5,7 +5,6 @@
 ^.*\.Rproj$
 ^IMPLEMENTATION_PLAN\.md$
 ^LICENSE\.md$
-^LICENSE$
 ^\.github$
 ^_pkgdown\.yml$
 ^docs$
