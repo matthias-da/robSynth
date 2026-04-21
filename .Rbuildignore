@@ -1,11 +1,12 @@
-^README\.md$
-^README\.Rmd$
-^\.Rcheck$
-^\.Rproj\.user$
 ^.*\.Rproj$
 ^IMPLEMENTATION_PLAN\.md$
 ^LICENSE\.md$
+^README\.Rmd$
+^README\.md$
+^\.Rcheck$
+^\.Rproj\.user$
+^\.claude$
 ^\.github$
 ^_pkgdown\.yml$
+^cran-comments\.md$
 ^docs$
-^\.claude$

@@ -1,0 +1,65 @@
+url: https://matthias-da.github.io/robSynth/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#004b87"
+
+home:
+  strip_header: true
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+
+reference:
+  - title: "Synthesis"
+    desc: "Main entry points for generating synthetic data."
+    contents:
+      - robsynth
+      - robsynth_hh
+      - synth_lm
+      - synth_glm
+  - title: "Robust conditional models"
+    desc: "Low-level fit and generate functions used by the synthesiser."
+    contents:
+      - fit_robust_continuous
+      - fit_robust_categorical
+      - generate_robust_continuous
+      - generate_robust_categorical
+      - robust_boxcox_lambda
+  - title: "Utility diagnostics"
+    contents:
+      - synth_utility
+      - utility
+      - compare
+      - compare_fit
+  - title: "Disclosure risk"
+    contents:
+      - synth_risk
+      - disclosure
+      - risk_utility_frontier
+      - estimate_contamination
+      - synth_from_clean
+  - title: "Helpers"
+    contents:
+      - detect_var_types
+      - weighted_median
+      - weighted_mad
+      - huber_weights
+      - strip_diagnostics
+      - generate_ar1_cov
+      - pmm_draw
+  - title: "S3 methods (print, plot, summary)"
+    contents:
+      - print.robsynth
+      - print.robsynth_hh
+      - print.ru_frontier
+      - summary.robsynth
+      - plot.robsynth
+
+articles:
+  - title: "Tutorial"
+    contents:
+      - robSynth-intro

@@ -1,7 +1,8 @@
 # robSynth <img src="man/figures/logo.png" align="right" height="139" />
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/statistikat/robSynth/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/statistikat/robSynth/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/matthias-da/robSynth/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/matthias-da/robSynth/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/matthias-da/robSynth/actions/workflows/pkgdown.yaml/badge.svg)](https://matthias-da.github.io/robSynth/)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 <!-- badges: end -->
 

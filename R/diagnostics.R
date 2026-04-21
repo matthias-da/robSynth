@@ -366,7 +366,7 @@ disclosure <- function(object, original, key_vars, target_var,
                 c(list(X = original, Y = synth,
                        key_vars = key_vars, target_var = target_var),
                   dots)),
-        error = function(e) { warning("dcap failed: ", conditionMessage(e));
+        error = function(e) { warning("dcap failed: ", conditionMessage(e))
                               NULL })
       if (!is.null(dc)) result$dcap <- dc
     } else warning("Package 'riskutility' not available; skipping dcap.")
@@ -378,7 +378,7 @@ disclosure <- function(object, original, key_vars, target_var,
       dc <- tryCatch(
         do.call(riskutility::dcr,
                 c(list(X = original, Y = synth, progress = FALSE), dots)),
-        error = function(e) { warning("dcr failed: ", conditionMessage(e));
+        error = function(e) { warning("dcr failed: ", conditionMessage(e))
                               NULL })
       if (!is.null(dc)) result$dcr <- dc
     } else warning("Package 'riskutility' not available; skipping dcr.")
@@ -392,7 +392,8 @@ disclosure <- function(object, original, key_vars, target_var,
                 c(list(X = original, Y = synth, key_vars = key_vars),
                   dots)),
         error = function(e) { warning("delta_presence failed: ",
-                                       conditionMessage(e)); NULL })
+                                       conditionMessage(e))
+                                       NULL })
       if (!is.null(dp)) result$delta_presence <- dp
     } else warning("Package 'riskutility' not available; skipping delta_presence.")
   }
@@ -404,7 +405,8 @@ disclosure <- function(object, original, key_vars, target_var,
         do.call(riskutility::domias,
                 c(list(X = original, Y = synth), dots)),
         error = function(e) { warning("domias failed: ",
-                                       conditionMessage(e)); NULL })
+                                       conditionMessage(e))
+                                       NULL })
       if (!is.null(dm)) result$domias <- dm
     } else warning("Package 'riskutility' not available; skipping domias.")
   }
@@ -416,7 +418,8 @@ disclosure <- function(object, original, key_vars, target_var,
         do.call(riskutility::drisk,
                 c(list(X = original, Y = synth, vars = key_vars), dots)),
         error = function(e) { warning("drisk failed: ",
-                                       conditionMessage(e)); NULL })
+                                       conditionMessage(e))
+                                       NULL })
       if (!is.null(dr)) result$drisk <- dr
     } else warning("Package 'riskutility' not available; skipping drisk.")
   }

@@ -562,8 +562,9 @@ print.robsynth <- function(x, ...) {
   if (length(x$transform_info) > 0L) {
     cat("  Transformations:",
         paste(names(x$transform_info),
-              sapply(x$transform_info, function(ti)
-                sprintf("(lambda=%.2f)", ti$lambda)),
+              vapply(x$transform_info, function(ti)
+                sprintf("(lambda=%.2f)", ti$lambda),
+                character(1L)),
               collapse = ", "), "\n")
   }
   invisible(x)

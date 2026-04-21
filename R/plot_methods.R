@@ -442,7 +442,7 @@ plot.robsynth <- function(x, type = c("density", "correlation", "scatter"),
       .cor_to_long(cor_orig,  paste0("Original (",  cor_method, ")")),
       .cor_to_long(cor_synth, paste0("Synthetic (", cor_method, ")"))
     )
-    panel_order <- sapply(panels, function(p) p$panel[1L])
+    panel_order <- vapply(panels, function(p) p$panel[1L], character(1L))
   }
   df <- do.call(rbind, panels)
   df$panel <- factor(df$panel, levels = panel_order)
