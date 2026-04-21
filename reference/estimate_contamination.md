@@ -104,10 +104,9 @@ Matthias Templ
 
 ``` r
 if (FALSE) { # \dontrun{
-data(iris)
-iris_c <- iris[, 1:4]
-iris_c[1:5, 1] <- iris_c[1:5, 1] + 10
-res <- estimate_contamination(iris_c, method = "cellwise")
+# Animals2: brain-vs-body weights with three dinosaur outliers.
+data(Animals2, package = "robustbase")
+res <- estimate_contamination(log(Animals2), method = "cellwise")
 image(res$clean_probs, main = "Clean probabilities")
 } # }
 ```

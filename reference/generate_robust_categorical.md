@@ -32,9 +32,11 @@ Matthias Templ
 
 ``` r
 if (FALSE) { # \dontrun{
-fit <- fit_robust_categorical(iris$Species,
-                              iris[, 1:2, drop = FALSE])
-y_new <- generate_robust_categorical(fit, iris[, 1:2, drop = FALSE])
+data(CrohnD, package = "robustbase")
+fit <- fit_robust_categorical(CrohnD$treat,
+                              CrohnD[, c("BMI", "age"), drop = FALSE])
+y_new <- generate_robust_categorical(fit,
+                              CrohnD[, c("BMI", "age"), drop = FALSE])
 table(y_new)
 } # }
 ```

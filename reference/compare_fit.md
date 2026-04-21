@@ -72,8 +72,10 @@ An S3 object of class `"robsynth_fit_compare"` with:
 
 ``` r
 if (FALSE) { # \dontrun{
-res <- robsynth(iris, m = 5)
-comp <- compare_fit(Sepal.Length ~ Sepal.Width + Petal.Length, res, iris)
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat, m = 5)
+comp <- compare_fit(BMI ~ age + height + weight, res, dat)
 comp$plot
 } # }
 ```

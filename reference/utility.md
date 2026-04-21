@@ -39,7 +39,9 @@ metric and a formatted print method.
 
 ``` r
 if (FALSE) { # \dontrun{
-res <- robsynth(iris)
-utility(res, iris)
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat)
+utility(res, dat)
 } # }
 ```

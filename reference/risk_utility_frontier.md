@@ -59,11 +59,15 @@ Matthias Templ
 
 ``` r
 if (FALSE) { # \dontrun{
-data(iris)
-s1 <- iris[sample(nrow(iris), replace = TRUE), ]
-s2 <- iris + matrix(rnorm(prod(dim(iris[,1:4]))), ncol = 4)
-s2 <- cbind(s2[,1:4], Species = iris$Species)
-res <- risk_utility_frontier(iris, list(bootstrap = s1, noisy = s2))
+data(CrohnD, package = "robustbase")
+dat  <- CrohnD[, -1]
+cont <- c("BMI", "height", "age", "weight")
+s1   <- dat[sample(nrow(dat), replace = TRUE), ]
+s2   <- dat
+s2[, cont] <- as.matrix(s2[, cont]) +
+             matrix(rnorm(nrow(dat) * length(cont), sd = 0.5),
+                    ncol = length(cont))
+res <- risk_utility_frontier(dat, list(bootstrap = s1, noisy = s2))
 plot(res$utility, res$risk, pch = 19)
 text(res$utility, res$risk, res$method, pos = 3)
 } # }

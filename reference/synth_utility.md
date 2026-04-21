@@ -83,8 +83,9 @@ Matthias Templ
 
 ``` r
 if (FALSE) { # \dontrun{
-data(iris)
-synth <- iris[sample(nrow(iris), replace = TRUE), ]
-synth_utility(iris, synth)
+data(CrohnD, package = "robustbase")
+dat   <- CrohnD[, -1]
+synth <- dat[sample(nrow(dat), replace = TRUE), ]
+synth_utility(dat, synth)
 } # }
 ```

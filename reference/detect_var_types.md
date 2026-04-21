@@ -32,7 +32,10 @@ Matthias Templ
 ## Examples
 
 ``` r
-detect_var_types(iris)
-#>  Sepal.Length   Sepal.Width  Petal.Length   Petal.Width       Species 
+data(CrohnD, package = "robustbase")
+detect_var_types(CrohnD)
+#>            ID        nrAdvE           BMI        height       country 
 #>  "continuous"  "continuous"  "continuous"  "continuous" "categorical" 
+#>           sex           age        weight         treat 
+#> "categorical"  "continuous"  "continuous" "categorical" 
 ```
