@@ -1,5 +1,7 @@
 # pkgdown site build + deploy to gh-pages branch.
-# Derived from usethis::use_pkgdown_github_pages().
+# Adapted from usethis::use_pkgdown_github_pages() to skip the
+# private-repo dependency `riskutility` (the vignette chunks that use
+# it are guarded with requireNamespace() and simply skip when absent).
 on:
   push:
     branches: [main, master]
@@ -29,7 +31,18 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          dependencies: '"hard"'
+          extra-packages: |
+            any::pkgdown
+            any::knitr
+            any::rmarkdown
+            any::ggplot2
+            any::gridExtra
+            any::partykit
+            any::ranger
+            any::xgboost
+            any::synthpop
+            local::.
           needs: website
 
       - name: Build site

@@ -1,5 +1,7 @@
-# Standard R-CMD-check workflow.
-# Derived from usethis::use_github_action("check-standard").
+# Standard R-CMD-check across platforms.
+# Derived from usethis::use_github_action("check-standard") and adapted to
+# skip the private-repo dependency `riskutility`.  Runs with
+# _R_CHECK_FORCE_SUGGESTS_=false so missing Suggests do not fail the check.
 on:
   push:
     branches: [main, master]
@@ -27,6 +29,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      _R_CHECK_FORCE_SUGGESTS_: false
 
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +44,18 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          dependencies: '"hard"'
+          extra-packages: |
+            any::rcmdcheck
+            any::tinytest
+            any::knitr
+            any::rmarkdown
+            any::ggplot2
+            any::gridExtra
+            any::partykit
+            any::ranger
+            any::xgboost
+            any::synthpop
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
