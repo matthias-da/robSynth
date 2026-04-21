@@ -19,8 +19,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' res <- robsynth(iris)
-#' utility(res, iris)
+#' data(CrohnD, package = "robustbase")
+#' dat <- CrohnD[, -1]
+#' res <- robsynth(dat)
+#' utility(res, dat)
 #' }
 utility <- function(object, original = NULL, metrics = NULL, ...) {
   UseMethod("utility")
@@ -142,8 +144,10 @@ print.robsynth_utility <- function(x, ...) {
 #' @export
 #' @examples
 #' \dontrun{
-#' res <- robsynth(iris, m = 5)
-#' comp <- compare_fit(Sepal.Length ~ Sepal.Width + Petal.Length, res, iris)
+#' data(CrohnD, package = "robustbase")
+#' dat <- CrohnD[, -1]
+#' res <- robsynth(dat, m = 5)
+#' comp <- compare_fit(BMI ~ age + height + weight, res, dat)
 #' comp$plot
 #' }
 compare_fit <- function(formula, object, original, plot = TRUE, ...) {
@@ -313,11 +317,13 @@ print.robsynth_fit_compare <- function(x, ...) {
 #' @export
 #' @examples
 #' \dontrun{
-#' res <- robsynth(iris)
-#' disclosure(res, iris,
-#'   key_vars = c("Sepal.Width", "Petal.Length"),
-#'   target_var = "Sepal.Length",
-#'   method = c("rapid", "dcap", "domias"))
+#' data(CrohnD, package = "robustbase")
+#' dat <- CrohnD[, -1]
+#' res <- robsynth(dat)
+#' disclosure(res, dat,
+#'   key_vars   = c("age", "height", "sex", "country"),
+#'   target_var = "BMI",
+#'   method     = c("rapid", "dcap", "domias"))
 #' }
 disclosure <- function(object, original, key_vars, target_var,
                        method = c("rapid", "distance"), ...) {

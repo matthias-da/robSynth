@@ -106,21 +106,23 @@
 #'   \code{\link{compare.robsynth}}, \code{\link{synth_lm}}
 #' @examples
 #' \dontrun{
-#' data(iris)
-#' iris_c <- iris
-#' iris_c[1:5, 1] <- iris_c[1:5, 1] + 10
+#' # CrohnD: 117 Crohn's-disease patients, mixed continuous + factor
+#' # variables, known outliers in BMI and nrAdvE (Cantoni & Ronchetti,
+#' # 2001, via robustbase).
+#' data(CrohnD, package = "robustbase")
+#' dat <- CrohnD[, -1]                     # drop opaque ID
 #'
-#' # Single method (default: robust)
-#' res <- robsynth(iris_c)
+#' # Single method (default: robust MM + Huber-weighted logistic)
+#' res <- robsynth(dat)
 #'
-#' # Per-variable methods
-#' res2 <- robsynth(iris_c,
-#'   method = c(Sepal.Length = "mm", Sepal.Width = "norm",
-#'              Petal.Length = "mm", Petal.Width = "cart",
-#'              Species = "polyreg"))
+#' # Per-variable methods (mix robust and non-robust backends)
+#' res2 <- robsynth(dat,
+#'   method = c(BMI = "mm", height = "norm", weight = "mm",
+#'              age = "robust_rf", country = "robust_logreg",
+#'              sex = "robust_logreg", treat = "polyreg"))
 #'
-#' # Multiple synthesis
-#' res3 <- robsynth(iris_c, m = 5)
+#' # Multiple synthesis with Reiter combining rules
+#' res3 <- robsynth(dat, m = 5)
 #' }
 robsynth <- function(data,
                      method = NULL,
@@ -654,8 +656,9 @@ summary.robsynth <- function(object, ...) {
 #' @export
 #' @examples
 #' \dontrun{
-#' res <- robsynth(iris, m = 5)
-#' fit <- synth_lm(Sepal.Length ~ Sepal.Width + Petal.Length, res)
+#' data(CrohnD, package = "robustbase")
+#' res <- robsynth(CrohnD[, -1], m = 5)
+#' fit <- synth_lm(BMI ~ age + height + weight, res)
 #' fit$coefficients
 #' }
 synth_lm <- function(formula, object, ...) {

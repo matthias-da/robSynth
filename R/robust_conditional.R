@@ -28,8 +28,9 @@
 #' @importFrom robustbase lmrob
 #' @examples
 #' \dontrun{
-#' fit <- fit_robust_continuous(iris$Sepal.Width,
-#'                              iris[, "Sepal.Length", drop = FALSE])
+#' data(CrohnD, package = "robustbase")
+#' fit <- fit_robust_continuous(CrohnD$BMI,
+#'                              CrohnD[, c("age", "height"), drop = FALSE])
 #' }
 fit_robust_continuous <- function(y, X,
                                   method = c("mm", "robust_cart"),
@@ -89,9 +90,11 @@ fit_robust_continuous <- function(y, X,
 #' @export
 #' @examples
 #' \dontrun{
-#' fit <- fit_robust_continuous(iris$Sepal.Width,
-#'                              iris[, "Sepal.Length", drop = FALSE])
-#' y_new <- generate_robust_continuous(fit, iris[, "Sepal.Length", drop = FALSE])
+#' data(CrohnD, package = "robustbase")
+#' fit <- fit_robust_continuous(CrohnD$BMI,
+#'                              CrohnD[, c("age", "height"), drop = FALSE])
+#' y_new <- generate_robust_continuous(fit,
+#'                              CrohnD[, c("age", "height"), drop = FALSE])
 #' }
 generate_robust_continuous <- function(fit, X_new,
                                        uncertainty = c("normal", "pmm"),
@@ -130,8 +133,9 @@ generate_robust_continuous <- function(fit, X_new,
 #' @importFrom nnet multinom
 #' @examples
 #' \dontrun{
-#' fit <- fit_robust_categorical(iris$Species,
-#'                               iris[, 1:2, drop = FALSE])
+#' data(CrohnD, package = "robustbase")
+#' fit <- fit_robust_categorical(CrohnD$treat,
+#'                               CrohnD[, c("BMI", "age"), drop = FALSE])
 #' }
 fit_robust_categorical <- function(y, X, weights = NULL, ...) {
   n <- length(y)
@@ -179,9 +183,11 @@ fit_robust_categorical <- function(y, X, weights = NULL, ...) {
 #' @export
 #' @examples
 #' \dontrun{
-#' fit <- fit_robust_categorical(iris$Species,
-#'                               iris[, 1:2, drop = FALSE])
-#' y_new <- generate_robust_categorical(fit, iris[, 1:2, drop = FALSE])
+#' data(CrohnD, package = "robustbase")
+#' fit <- fit_robust_categorical(CrohnD$treat,
+#'                               CrohnD[, c("BMI", "age"), drop = FALSE])
+#' y_new <- generate_robust_categorical(fit,
+#'                               CrohnD[, c("BMI", "age"), drop = FALSE])
 #' table(y_new)
 #' }
 generate_robust_categorical <- function(fit, X_new) {

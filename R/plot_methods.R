@@ -30,10 +30,11 @@
 #' @seealso \code{\link{plot.robsynth}}, \code{\link{synth_utility}}
 #' @examples
 #' \dontrun{
-#' data(iris)
-#' res <- robsynth(iris, method = "robust_conditional")
-#' compare(res, original = iris)
-#' compare(res, original = iris, vars = c("Sepal.Length", "Species"))
+#' data(CrohnD, package = "robustbase")
+#' dat <- CrohnD[, -1]
+#' res <- robsynth(dat, method = "robust_conditional")
+#' compare(res, original = dat)
+#' compare(res, original = dat, vars = c("BMI", "treat"))
 #' }
 compare <- function(object, ...) {
   UseMethod("compare")
@@ -259,12 +260,13 @@ compare.robsynth <- function(object, original, vars = NULL, ...) {
 #' @seealso \code{\link{compare.robsynth}}, \code{\link{synth_utility}}
 #' @examples
 #' \dontrun{
-#' data(iris)
-#' res <- robsynth(iris, method = "robust_conditional")
-#' plot(res, type = "density", original = iris)
-#' plot(res, type = "correlation", original = iris)
-#' plot(res, type = "scatter", original = iris)                       # overlay
-#' plot(res, type = "scatter", original = iris, layout = "facet")     # panels
+#' data(CrohnD, package = "robustbase")
+#' dat <- CrohnD[, -1]
+#' res <- robsynth(dat, method = "robust_conditional")
+#' plot(res, type = "density",     original = dat)
+#' plot(res, type = "correlation", original = dat)
+#' plot(res, type = "scatter",     original = dat)                   # overlay
+#' plot(res, type = "scatter",     original = dat, layout = "facet") # panels
 #' }
 plot.robsynth <- function(x, type = c("density", "correlation", "scatter"),
                           original = NULL, vars = NULL,

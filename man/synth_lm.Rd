@@ -27,8 +27,9 @@ estimates using Reiter's (2003) partially synthetic data combining rules.
 }
 \examples{
 \dontrun{
-res <- robsynth(iris, m = 5)
-fit <- synth_lm(Sepal.Length ~ Sepal.Width + Petal.Length, res)
+data(CrohnD, package = "robustbase")
+res <- robsynth(CrohnD[, -1], m = 5)
+fit <- synth_lm(BMI ~ age + height + weight, res)
 fit$coefficients
 }
 }

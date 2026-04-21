@@ -93,12 +93,13 @@ overlap heavily.
 }
 \examples{
 \dontrun{
-data(iris)
-res <- robsynth(iris, method = "robust_conditional")
-plot(res, type = "density", original = iris)
-plot(res, type = "correlation", original = iris)
-plot(res, type = "scatter", original = iris)                       # overlay
-plot(res, type = "scatter", original = iris, layout = "facet")     # panels
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat, method = "robust_conditional")
+plot(res, type = "density",     original = dat)
+plot(res, type = "correlation", original = dat)
+plot(res, type = "scatter",     original = dat)                   # overlay
+plot(res, type = "scatter",     original = dat, layout = "facet") # panels
 }
 }
 \seealso{

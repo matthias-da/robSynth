@@ -33,9 +33,11 @@ mean matching (PMM).
 }
 \examples{
 \dontrun{
-fit <- fit_robust_continuous(iris$Sepal.Width,
-                             iris[, "Sepal.Length", drop = FALSE])
-y_new <- generate_robust_continuous(fit, iris[, "Sepal.Length", drop = FALSE])
+data(CrohnD, package = "robustbase")
+fit <- fit_robust_continuous(CrohnD$BMI,
+                             CrohnD[, c("age", "height"), drop = FALSE])
+y_new <- generate_robust_continuous(fit,
+                             CrohnD[, c("age", "height"), drop = FALSE])
 }
 }
 \author{

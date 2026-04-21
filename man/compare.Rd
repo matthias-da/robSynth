@@ -42,10 +42,11 @@ CDFs. Lower values indicate better distributional preservation.
 }
 \examples{
 \dontrun{
-data(iris)
-res <- robsynth(iris, method = "robust_conditional")
-compare(res, original = iris)
-compare(res, original = iris, vars = c("Sepal.Length", "Species"))
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat, method = "robust_conditional")
+compare(res, original = dat)
+compare(res, original = dat, vars = c("BMI", "treat"))
 }
 }
 \seealso{

@@ -35,8 +35,10 @@ compares coefficient estimates.  When \code{m > 1}, applies Reiter
 }
 \examples{
 \dontrun{
-res <- robsynth(iris, m = 5)
-comp <- compare_fit(Sepal.Length ~ Sepal.Width + Petal.Length, res, iris)
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat, m = 5)
+comp <- compare_fit(BMI ~ age + height + weight, res, dat)
 comp$plot
 }
 }

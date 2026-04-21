@@ -44,8 +44,9 @@ with Huber-weighted splits as fallback.
 }
 \examples{
 \dontrun{
-fit <- fit_robust_continuous(iris$Sepal.Width,
-                             iris[, "Sepal.Length", drop = FALSE])
+data(CrohnD, package = "robustbase")
+fit <- fit_robust_continuous(CrohnD$BMI,
+                             CrohnD[, c("age", "height"), drop = FALSE])
 }
 }
 \author{

@@ -65,11 +65,13 @@ dependencies are satisfied.
 }
 \examples{
 \dontrun{
-res <- robsynth(iris)
-disclosure(res, iris,
-  key_vars = c("Sepal.Width", "Petal.Length"),
-  target_var = "Sepal.Length",
-  method = c("rapid", "dcap", "domias"))
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat)
+disclosure(res, dat,
+  key_vars   = c("age", "height", "sex", "country"),
+  target_var = "BMI",
+  method     = c("rapid", "dcap", "domias"))
 }
 }
 \references{

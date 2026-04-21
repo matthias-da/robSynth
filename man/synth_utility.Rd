@@ -48,9 +48,10 @@ use the null-scaled pMSE of Snoke and Slavkovic (2018),
 }
 \examples{
 \dontrun{
-data(iris)
-synth <- iris[sample(nrow(iris), replace = TRUE), ]
-synth_utility(iris, synth)
+data(CrohnD, package = "robustbase")
+dat   <- CrohnD[, -1]
+synth <- dat[sample(nrow(dat), replace = TRUE), ]
+synth_utility(dat, synth)
 }
 }
 \references{

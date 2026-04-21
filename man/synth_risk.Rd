@@ -47,9 +47,10 @@ synthetic data.
 }
 \examples{
 \dontrun{
-data(iris)
-synth <- iris[sample(nrow(iris), replace = TRUE), ]
-synth_risk(iris, synth)
+data(CrohnD, package = "robustbase")
+dat   <- CrohnD[, -1]
+synth <- dat[sample(nrow(dat), replace = TRUE), ]
+synth_risk(dat, synth)
 }
 }
 \author{

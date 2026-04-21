@@ -21,7 +21,8 @@ Classifies each column as \code{"continuous"} or \code{"categorical"}
 based on class and number of unique values.
 }
 \examples{
-detect_var_types(iris)
+data(CrohnD, package = "robustbase")
+detect_var_types(CrohnD)
 }
 \author{
 Matthias Templ

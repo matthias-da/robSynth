@@ -11,7 +11,8 @@
 #' @author Matthias Templ
 #' @export
 #' @examples
-#' detect_var_types(iris)
+#' data(CrohnD, package = "robustbase")
+#' detect_var_types(CrohnD)
 detect_var_types <- function(data, max_levels = 5L) {
   stopifnot(is.data.frame(data))
   types <- vapply(data, function(x) {

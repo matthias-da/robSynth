@@ -30,7 +30,9 @@ by averaging across copies.
 }
 \examples{
 \dontrun{
-res <- robsynth(iris)
-utility(res, iris)
+data(CrohnD, package = "robustbase")
+dat <- CrohnD[, -1]
+res <- robsynth(dat)
+utility(res, dat)
 }
 }

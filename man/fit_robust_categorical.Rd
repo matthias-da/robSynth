@@ -28,8 +28,9 @@ weights derived from cell-level contamination weights.
 }
 \examples{
 \dontrun{
-fit <- fit_robust_categorical(iris$Species,
-                              iris[, 1:2, drop = FALSE])
+data(CrohnD, package = "robustbase")
+fit <- fit_robust_categorical(CrohnD$treat,
+                              CrohnD[, c("BMI", "age"), drop = FALSE])
 }
 }
 \author{

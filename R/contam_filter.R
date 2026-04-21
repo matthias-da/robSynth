@@ -51,10 +51,9 @@
 #' @importFrom robustbase covMcd
 #' @examples
 #' \dontrun{
-#' data(iris)
-#' iris_c <- iris[, 1:4]
-#' iris_c[1:5, 1] <- iris_c[1:5, 1] + 10
-#' res <- estimate_contamination(iris_c, method = "cellwise")
+#' # Animals2: brain-vs-body weights with three dinosaur outliers.
+#' data(Animals2, package = "robustbase")
+#' res <- estimate_contamination(log(Animals2), method = "cellwise")
 #' image(res$clean_probs, main = "Clean probabilities")
 #' }
 estimate_contamination <- function(data,
@@ -204,11 +203,10 @@ estimate_contamination <- function(data,
 #' @export
 #' @examples
 #' \dontrun{
-#' data(iris)
-#' iris_c <- iris[, 1:4]
-#' iris_c[1:5, 1] <- iris_c[1:5, 1] + 10
-#' contam <- estimate_contamination(iris_c, method = "cellwise")
-#' synth  <- synth_from_clean(iris_c, contam$clean_probs)
+#' data(Animals2, package = "robustbase")
+#' X      <- log(Animals2)
+#' contam <- estimate_contamination(X, method = "cellwise")
+#' synth  <- synth_from_clean(X, contam$clean_probs)
 #' }
 synth_from_clean <- function(data, clean_probs,
                              method = c("parametric", "weighted_resample"),
