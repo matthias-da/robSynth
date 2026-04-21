@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Matthias Templ" />
+
+<meta name="date" content="2026-04-20" />
+
+<title>robSynth: Robust Synthetic Data Generation</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">robSynth: Robust Synthetic Data
+Generation</h1>
+<h4 class="author">Matthias Templ</h4>
+<h4 class="date">2026-04-20</h4>
+
+
+
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages(&quot;remotes&quot;)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;statistikat/robSynth&quot;</span>)</span></code></pre></div>
+</div>
+<div id="the-problem-contamination-propagates-through-synthesis" class="section level2">
+<h2>The problem: contamination propagates through synthesis</h2>
+<p>Standard synthetic data generators (synthpop, simPop) use OLS or CART
+to model each variable sequentially. When the training data contains
+outliers, each conditional model is distorted, and the distortion
+compounds through subsequent variables.</p>
+<p><strong>robSynth</strong> replaces these non-robust models with
+MM-estimators (continuous) and Huber-weighted logistic regression
+(categorical). MM-estimation achieves 50% breakdown point (the maximum
+for regression) and 95% asymptotic efficiency under Gaussian errors.</p>
+<blockquote>
+<p><strong>When to use robSynth instead of synthpop:</strong> whenever
+your training data may contain outliers, coding errors, linkage
+mismatches, or measurement artifacts. If you are certain the data is
+clean, synthpop’s CART is a fine choice.</p>
+</blockquote>
+</div>
+<div id="the-key-demo-robust-vs-non-robust-under-contamination" class="section level2">
+<h2>The key demo: robust vs non-robust under contamination</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(robSynth)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate data with a known regression structure</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">X1 =</span> <span class="fu">rnorm</span>(n),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">X2 =</span> <span class="fu">rnorm</span>(n),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">X3 =</span> <span class="fu">rnorm</span>(n),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">X4 =</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># True relationship: X4 = 0.5*X1 + 0.5*X2 + 0.3*X3 + noise</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>X4 <span class="ot">&lt;-</span> <span class="fl">0.5</span> <span class="sc">*</span> df<span class="sc">$</span>X1 <span class="sc">+</span> <span class="fl">0.5</span> <span class="sc">*</span> df<span class="sc">$</span>X2 <span class="sc">+</span> <span class="fl">0.3</span> <span class="sc">*</span> df<span class="sc">$</span>X3 <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="at">sd =</span> <span class="fl">0.5</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>G1 <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="fl">0.3</span> <span class="sc">*</span> df<span class="sc">$</span>X1)))</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>G2 <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="fl">0.3</span> <span class="sc">*</span> df<span class="sc">$</span>X2)))</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Add 15% contamination: large shift in X1 and X2</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(n, <span class="dv">75</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>X1[idx] <span class="ot">&lt;-</span> df<span class="sc">$</span>X1[idx] <span class="sc">+</span> <span class="dv">8</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>X2[idx] <span class="ot">&lt;-</span> df<span class="sc">$</span>X2[idx] <span class="sc">+</span> <span class="dv">8</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>G1[idx] <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="dv">1</span> <span class="sc">-</span> <span class="fu">as.integer</span>(df<span class="sc">$</span>G1[idx]) <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Store clean version</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>df_clean <span class="ot">&lt;-</span> df</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>df_clean<span class="sc">$</span>X1[idx] <span class="ot">&lt;-</span> df_clean<span class="sc">$</span>X1[idx] <span class="sc">-</span> <span class="dv">8</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>df_clean<span class="sc">$</span>X2[idx] <span class="ot">&lt;-</span> df_clean<span class="sc">$</span>X2[idx] <span class="sc">-</span> <span class="dv">8</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare: robust vs non-robust synthesis (10 reps averaged)</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>true_coef <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">X1 =</span> <span class="fl">0.5</span>, <span class="at">X2 =</span> <span class="fl">0.5</span>, <span class="at">X3 =</span> <span class="fl">0.3</span>)  <span class="co"># true betas for X4 model</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>rmse_mm <span class="ot">&lt;-</span> rmse_ols <span class="ot">&lt;-</span> cor_mm <span class="ot">&lt;-</span> cor_ols <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">10</span>)</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (r <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) {</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  s_mm  <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df, <span class="at">seed =</span> r)<span class="sc">$</span>synth</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  s_ols <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df, <span class="at">method =</span> <span class="st">&quot;parametric&quot;</span>, <span class="at">seed =</span> r)<span class="sc">$</span>synth</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Regression on synthetic data vs true coefficients</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  fit_mm  <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(X4 <span class="sc">~</span> X1 <span class="sc">+</span> X2 <span class="sc">+</span> X3, <span class="at">data =</span> s_mm))[<span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>,<span class="st">&quot;X2&quot;</span>,<span class="st">&quot;X3&quot;</span>)]</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  fit_ols <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(X4 <span class="sc">~</span> X1 <span class="sc">+</span> X2 <span class="sc">+</span> X3, <span class="at">data =</span> s_ols))[<span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>,<span class="st">&quot;X2&quot;</span>,<span class="st">&quot;X3&quot;</span>)]</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  rmse_mm[r]  <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((fit_mm <span class="sc">-</span> true_coef)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  rmse_ols[r] <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((fit_ols <span class="sc">-</span> true_coef)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Correlation preservation</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  cor_mm[r]  <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>((<span class="fu">cor</span>(df_clean[,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]) <span class="sc">-</span> <span class="fu">cor</span>(s_mm[,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]))<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  cor_ols[r] <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>((<span class="fu">cor</span>(df_clean[,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]) <span class="sc">-</span> <span class="fu">cor</span>(s_ols[,<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>]))<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;                RMSE-beta  Corr Frobenius</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 RMSE-beta  Corr Frobenius</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;MM (robust):    %.4f     %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="fu">mean</span>(rmse_mm), <span class="fu">mean</span>(cor_mm)))</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; MM (robust):    0.0351     1.5308</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;OLS:            %.4f     %.4f</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="fu">mean</span>(rmse_ols), <span class="fu">mean</span>(cor_ols)))</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; OLS:            0.3918     1.4835</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;MM advantage:   %.0f%%        %.0f%%</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            <span class="dv">100</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">mean</span>(rmse_mm)<span class="sc">/</span><span class="fu">mean</span>(rmse_ols)),</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>            <span class="dv">100</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">mean</span>(cor_mm)<span class="sc">/</span><span class="fu">mean</span>(cor_ols))))</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; MM advantage:   91%        -3%</span></span></code></pre></div>
+<p>Under 15% contamination with large leverage shifts (+8 SD in X1 and
+X2), MM synthesis preserves both regression coefficients and correlation
+structure significantly better than OLS. The contaminated observations
+pull OLS regression slopes toward zero (attenuation bias), while MM
+downweights them and recovers the true conditional relationships.</p>
+</div>
+<div id="basic-usage" class="section level2">
+<h2>Basic usage</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Default: robust synthesis (MM + weighted logistic)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(res)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; robSynth result</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Variables:  6 ( 4 continuous, 2 categorical )</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Synthetic n: 500 </span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Methods: mm, robust_logreg</span></span></code></pre></div>
+<p>The result stores both the synthetic data (<code>res$synth</code>)
+and the original (<code>res$original</code>) for convenient downstream
+analysis.</p>
+</div>
+<div id="per-variable-methods" class="section level2">
+<h2>Per-variable methods</h2>
+<p>Mix robust and non-robust methods as needed:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>res2 <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="fu">c</span>(<span class="at">X1 =</span> <span class="st">&quot;mm&quot;</span>, <span class="at">X2 =</span> <span class="st">&quot;robust_rf&quot;</span>, <span class="at">X3 =</span> <span class="st">&quot;robust_xgboost&quot;</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">X4 =</span> <span class="st">&quot;mm&quot;</span>, <span class="at">G1 =</span> <span class="st">&quot;robust_logreg&quot;</span>, <span class="at">G2 =</span> <span class="st">&quot;polyreg&quot;</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>res2<span class="sc">$</span>method</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               X1               X2               X3               X4 </span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             &quot;mm&quot;      &quot;robust_rf&quot; &quot;robust_xgboost&quot;             &quot;mm&quot; </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               G1               G2 </span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  &quot;robust_logreg&quot;        &quot;polyreg&quot;</span></span></code></pre></div>
+<p>Available methods:</p>
+<table>
+<colgroup>
+<col width="32%" />
+<col width="24%" />
+<col width="44%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Type</th>
+<th>Robustness</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>&quot;mm&quot;</code></td>
+<td>Continuous (default)</td>
+<td>MM-estimation, 50% breakdown</td>
+</tr>
+<tr class="even">
+<td><code>&quot;robust_cart&quot;</code></td>
+<td>Both</td>
+<td>Median leaves + MAD scale</td>
+</tr>
+<tr class="odd">
+<td><code>&quot;robust_rf&quot;</code></td>
+<td>Both</td>
+<td>Weighted by y-outlier distance</td>
+</tr>
+<tr class="even">
+<td><code>&quot;robust_xgboost&quot;</code></td>
+<td>Both</td>
+<td>Pseudo-Huber loss</td>
+</tr>
+<tr class="odd">
+<td><code>&quot;robust_logreg&quot;</code></td>
+<td>Categorical (default)</td>
+<td>Huber-weighted logistic</td>
+</tr>
+<tr class="even">
+<td><code>&quot;norm&quot;</code></td>
+<td>Continuous</td>
+<td>Standard OLS (no robustness)</td>
+</tr>
+<tr class="odd">
+<td><code>&quot;cart&quot;</code> / <code>&quot;ctree&quot;</code></td>
+<td>Both</td>
+<td>Standard trees</td>
+</tr>
+<tr class="even">
+<td><code>&quot;logreg&quot;</code> / <code>&quot;polyreg&quot;</code></td>
+<td>Categorical</td>
+<td>Standard logistic/multinomial</td>
+</tr>
+<tr class="odd">
+<td><code>&quot;sample&quot;</code></td>
+<td>Both</td>
+<td>Marginal resampling</td>
+</tr>
+<tr class="even">
+<td><code>&quot;passive&quot;</code></td>
+<td>Derived</td>
+<td>Deterministic formula</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> MM-estimation assumes approximately symmetric
+conditional errors. For heavily skewed variables, apply a transformation
+first (see next section).</p>
+</div>
+<div id="transformations-for-skewed-variables" class="section level2">
+<h2>Transformations for skewed variables</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add an income-like variable (right-skewed) for this demo</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>income <span class="ot">&lt;-</span> <span class="fu">rlnorm</span>(n, <span class="dv">10</span>, <span class="fl">0.5</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>income[idx] <span class="ot">&lt;-</span> df<span class="sc">$</span>income[idx] <span class="sc">*</span> <span class="dv">10</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust Box-Cox normalizes before synthesis, back-transforms after</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>res3 <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df, <span class="at">transform =</span> <span class="fu">list</span>(<span class="at">income =</span> <span class="st">&quot;boxcox&quot;</span>), <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Estimated lambda:&quot;</span>, res3<span class="sc">$</span>transform_info<span class="sc">$</span>income<span class="sc">$</span>lambda, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Estimated lambda: -0.65</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Lambda near 0 = log-transform (expected for lognormal data)</span></span></code></pre></div>
+<p>The lambda parameter is estimated by minimizing a robust skewness
+criterion (<code>|mean - median| / MAD</code>), which is itself
+resistant to the outliers that motivate the transformation.</p>
+</div>
+<div id="custom-formulas-and-visit-sequence" class="section level2">
+<h2>Custom formulas and visit sequence</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>res4 <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">visit.sequence =</span> <span class="fu">c</span>(<span class="st">&quot;G1&quot;</span>, <span class="st">&quot;G2&quot;</span>, <span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;X3&quot;</span>, <span class="st">&quot;X4&quot;</span>, <span class="st">&quot;income&quot;</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">formulas =</span> <span class="fu">list</span>(<span class="at">X3 =</span> <span class="sc">~</span> X1 <span class="sc">*</span> X2 <span class="sc">+</span> G1),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">transform =</span> <span class="fu">list</span>(<span class="at">income =</span> <span class="st">&quot;log&quot;</span>),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span>)</span></code></pre></div>
+</div>
+<div id="multiple-synthesis-with-combining-rules" class="section level2">
+<h2>Multiple synthesis with combining rules</h2>
+<p>Generate <code>m &gt; 1</code> synthetic copies for valid statistical
+inference:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res5 <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df[, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>], <span class="at">m =</span> <span class="dv">5</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit a model on the synthetic data with Reiter (2003) combining rules</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># (NOT Rubin&#39;s rules -- the variance formula differs for synthetic data)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">synth_lm</span>(X1 <span class="sc">~</span> X2 <span class="sc">+</span> X3 <span class="sc">+</span> G1, res5)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">coef =</span> <span class="fu">round</span>(fit<span class="sc">$</span>coefficients, <span class="dv">4</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">se   =</span> <span class="fu">round</span>(fit<span class="sc">$</span>se, <span class="dv">4</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">df   =</span> <span class="fu">round</span>(fit<span class="sc">$</span>df, <span class="dv">1</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                coef     se  df</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept) -0.0485 0.0184 5.7</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; X2           0.8913 0.0031 7.2</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; X3           0.0653 0.0113 6.3</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; G11          0.3886 0.0670 4.7</span></span></code></pre></div>
+</div>
+<div id="utility-assessment" class="section level2">
+<h2>Utility assessment</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>u <span class="ot">&lt;-</span> <span class="fu">utility</span>(res)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(u)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; robSynth Utility Assessment</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ===========================</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   pMSE:         0.033628</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Mean KS:      0.1115</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Per-variable KS:</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     X1           0.0380</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     X2           0.1260</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     X3           0.0320</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     X4           0.2500</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Correlation:  0.4011  (Frobenius norm, lower=better)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Regression:</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Relative bias: 13.9636</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     CI overlap:    0.000</span></span></code></pre></div>
+<p>Interpretation:</p>
+<ul>
+<li><strong>pMSE</strong> near 0: synthetic data is hard to distinguish
+from original</li>
+<li><strong>Mean KS</strong> &lt; 0.05: marginal distributions well
+preserved</li>
+<li><strong>Correlation</strong> &lt; 0.1: joint structure well
+preserved</li>
+<li><strong>CI overlap</strong> near 1: inferential conclusions
+preserved</li>
+</ul>
+</div>
+<div id="model-based-comparison" class="section level2">
+<h2>Model-based comparison</h2>
+<p>Compare a specific regression analysis on original vs synthetic:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>comp <span class="ot">&lt;-</span> <span class="fu">compare_fit</span>(X1 <span class="sc">~</span> X2 <span class="sc">+</span> X3 <span class="sc">+</span> G1, res, df, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(comp)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; robSynth Model Comparison</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; =========================</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Coefficient comparison (original vs synthetic):</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             Original Synthetic CI_overlap Std_diff</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (Intercept)  -0.0448    0.0787      0.659    0.948</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; X2            0.8973    0.9021      0.940    0.167</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; X3            0.0605    0.0848      0.903    0.270</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; G11           0.3224    0.2613      0.876   -0.345</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Mean |standardised difference|: 0.261</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Mean CI overlap: 0.844</span></span></code></pre></div>
+<p>A mean CI overlap above 0.5 and mean |standardized difference| below
+2 indicate acceptable preservation for most applications.</p>
+</div>
+<div id="visual-comparison" class="section level2">
+<h2>Visual comparison</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">&quot;ggplot2&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compare</span>(res, df)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; TableGrob (2 x 1) &quot;arrange&quot;: 2 grobs</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   z     cells    name           grob</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1 (1-1,1-1) arrange gtable[layout]</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2 (2-2,1-1) arrange gtable[layout]</span></span></code></pre></div>
+</div>
+<div id="disclosure-risk" class="section level2">
+<h2>Disclosure risk</h2>
+<p>Assess whether a random-forest attacker could infer sensitive
+attributes from the synthetic data:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">disclosure</span>(res, df,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">key_vars =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;G1&quot;</span>),</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_var =</span> <span class="st">&quot;X2&quot;</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;distance&quot;</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(d)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; robSynth Disclosure Risk Assessment</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ====================================</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Distance-based:</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Median distance to nearest synth: 0.093</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     5th percentile distance: 0.022</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     % below threshold (0.5): 96.6%</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Key vars: X1, G1</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Target: X2</span></span></code></pre></div>
+<p>Interpretation of distance-based risk:</p>
+<ul>
+<li><strong>Median distance</strong> &gt; 1.0: low risk (synthetic
+records are far from originals)</li>
+<li><strong>5th percentile</strong> &gt; 0.3: even the closest matches
+are reasonably distant</li>
+<li><strong>% below threshold</strong> &lt; 10%: few records at high
+disclosure risk</li>
+</ul>
+<p>When the <code>riskutility</code> package is installed, RAPID (Thees,
+Mueller &amp; Templ, 2025) provides a model-based risk measure using the
+proportion of records whose sensitive attribute can be predicted within
+10% error.</p>
+</div>
+<div id="hierarchical-data-householdperson" class="section level2">
+<h2>Hierarchical data (household/person)</h2>
+<p>For survey data with nested structures:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>hh <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hhid      =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="at">each =</span> <span class="dv">3</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">hh_income =</span> <span class="fu">rep</span>(<span class="fu">rnorm</span>(<span class="dv">100</span>, <span class="dv">5000</span>, <span class="dv">1000</span>), <span class="at">each =</span> <span class="dv">3</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">region    =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;A&quot;</span>, <span class="st">&quot;B&quot;</span>), <span class="dv">100</span>, <span class="cn">TRUE</span>), <span class="at">each =</span> <span class="dv">3</span>)),</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">age       =</span> <span class="fu">rnorm</span>(<span class="dv">300</span>, <span class="dv">40</span>, <span class="dv">15</span>),</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sex       =</span> <span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;M&quot;</span>, <span class="st">&quot;F&quot;</span>), <span class="dv">300</span>, <span class="cn">TRUE</span>))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Add household-level outliers</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>hh<span class="sc">$</span>hh_income[<span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>] <span class="ot">&lt;-</span> hh<span class="sc">$</span>hh_income[<span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>] <span class="sc">+</span> <span class="dv">8000</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>res_hh <span class="ot">&lt;-</span> <span class="fu">suppressMessages</span>(</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">robsynth_hh</span>(hh, <span class="at">hhid =</span> <span class="st">&quot;hhid&quot;</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>              <span class="at">hh_vars =</span> <span class="fu">c</span>(<span class="st">&quot;hh_income&quot;</span>, <span class="st">&quot;region&quot;</span>),</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>              <span class="at">person_vars =</span> <span class="fu">c</span>(<span class="st">&quot;age&quot;</span>, <span class="st">&quot;sex&quot;</span>),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>              <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(res_hh)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; robSynth hierarchical result</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Households: 100 </span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Persons: 300 </span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   HH vars: hh_income, region </span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Person vars: age, sex</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify: household sizes preserved</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="fu">all</span>(<span class="fu">table</span>(res_hh<span class="sc">$</span>synth<span class="sc">$</span>hhid) <span class="sc">==</span> <span class="dv">3</span>)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>Phase 1 resamples complete households (preserving within-household
+composition), Phase 2 synthesizes person-level variables conditional on
+household context.</p>
+</div>
+<div id="survey-weights" class="section level2">
+<h2>Survey weights</h2>
+<p>Design weights from complex sampling are passed to all model
+fits:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>df_w <span class="ot">&lt;-</span> df[, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>df_w<span class="sc">$</span>sampweight <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="fu">nrow</span>(df_w), <span class="dv">1</span>, <span class="dv">10</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>res_w <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df_w, <span class="at">weights =</span> <span class="st">&quot;sampweight&quot;</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Weight column used for fitting but not synthesized</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(res_w<span class="sc">$</span>synth)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;X1&quot; &quot;X2&quot; &quot;X3&quot; &quot;X4&quot; &quot;G1&quot; &quot;G2&quot;</span></span></code></pre></div>
+<p>Note: survey weights modify the estimation objective. Point estimates
+are approximately design-consistent, but standard errors from the
+weighted lmrob are not fully design-corrected.</p>
+</div>
+<div id="parallel-computation" class="section level2">
+<h2>Parallel computation</h2>
+<p>When generating many synthetic copies, distribute across cores:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>res_par <span class="ot">&lt;-</span> <span class="fu">robsynth</span>(df, <span class="at">m =</span> <span class="dv">20</span>, <span class="at">n_cores =</span> <span class="dv">4</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span></code></pre></div>
+</div>
+<div id="comparison-with-synthpop" class="section level2">
+<h2>Comparison with synthpop</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>synthpop</th>
+<th>robSynth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Default method</td>
+<td>CART</td>
+<td>MM-estimation</td>
+</tr>
+<tr class="even">
+<td>Robustness</td>
+<td>None</td>
+<td>Bounded influence</td>
+</tr>
+<tr class="odd">
+<td>Per-variable methods</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Custom formulas</td>
+<td>Via <code>passive</code></td>
+<td>Direct <code>formulas</code> argument</td>
+</tr>
+<tr class="odd">
+<td>Multiple synthesis</td>
+<td>Yes</td>
+<td>Yes (+ <code>synth_lm()</code>)</td>
+</tr>
+<tr class="even">
+<td>Hierarchical data</td>
+<td>Limited (<code>nested</code>)</td>
+<td>Yes (<code>robsynth_hh()</code>)</td>
+</tr>
+<tr class="odd">
+<td>Survey weights</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr class="even">
+<td>Disclosure risk</td>
+<td>Yes (CAP/TCAP)</td>
+<td>Yes (RAPID)</td>
+</tr>
+<tr class="odd">
+<td>CRAN</td>
+<td>Yes</td>
+<td>Planned</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Migration from synthpop:</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># synthpop:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(synthpop)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">syn</span>(data, <span class="at">method =</span> <span class="st">&quot;cart&quot;</span>, <span class="at">m =</span> <span class="dv">5</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># robSynth equivalent (non-robust, same behavior):</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">robsynth</span>(data, <span class="at">method =</span> <span class="st">&quot;cart&quot;</span>, <span class="at">m =</span> <span class="dv">5</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># robSynth default (robust):</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">robsynth</span>(data, <span class="at">m =</span> <span class="dv">5</span>)</span></code></pre></div>
+</div>
+<div id="citation" class="section level2">
+<h2>Citation</h2>
+<pre><code>Templ, M. (2026). Robust synthetic data generation: protecting data
+quality from contaminated training data. Submitted.</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+Package: robSynth
+Type: Package
+Title: Robust Synthetic Data Generation
+Version: 0.5.0
+Authors@R: person("Matthias", "Templ",
+    email = "matthias.templ@fhnw.ch",
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0002-8638-5276"))
+Author: Matthias Templ [aut, cre]
+Maintainer: Matthias Templ <matthias.templ@fhnw.ch>
+Description: Robust synthetic data generation methods that protect data
+    quality from contaminated training data.  Replaces the conditional
+    models in sequential synthesis with MM-estimators (continuous) and
+    weighted logistic regression (categorical), achieving bounded
+    influence and high breakdown point.  Includes utility metrics
+    (pMSE, KS, regression preservation, correlation) and disclosure
+    risk assessment (k-anonymity, membership inference, TCAP).
+Depends: R (>= 4.0.0)
+Imports: robustbase, nnet, rpart, stats, MASS
+Suggests: partykit, synthpop, ggplot2, gridExtra, riskutility, ranger,
+    xgboost, tinytest, knitr, rmarkdown
+VignetteBuilder: knitr
+License: GPL (>= 2)
+Encoding: UTF-8
+URL: https://github.com/statistikat/robSynth
+BugReports: https://github.com/statistikat/robSynth/issues
+RoxygenNote: 7.3.3

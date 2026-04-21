@@ -1,0 +1,342 @@
+---
+title: "robSynth: Robust Synthetic Data Generation"
+author: "Matthias Templ"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{robSynth: Robust Synthetic Data Generation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+## Installation
+
+```{r install, eval = FALSE}
+# install.packages("remotes")
+remotes::install_github("statistikat/robSynth")
+```
+
+## The problem: contamination propagates through synthesis
+
+Standard synthetic data generators (synthpop, simPop) use OLS or CART to
+model each variable sequentially.  When the training data contains
+outliers, each conditional model is distorted, and the distortion
+compounds through subsequent variables.
+
+**robSynth** replaces these non-robust models with MM-estimators
+(continuous) and Huber-weighted logistic regression (categorical).
+MM-estimation achieves 50% breakdown point (the maximum for regression)
+and 95% asymptotic efficiency under Gaussian errors.
+
+> **When to use robSynth instead of synthpop:** whenever your training data
+> may contain outliers, coding errors, linkage mismatches, or measurement
+> artifacts.  If you are certain the data is clean, synthpop's CART is a
+> fine choice.
+
+## The key demo: robust vs non-robust under contamination
+
+```{r demo}
+library(robSynth)
+
+# Generate data with a known regression structure
+set.seed(42)
+n <- 500
+df <- data.frame(
+  X1 = rnorm(n),
+  X2 = rnorm(n),
+  X3 = rnorm(n),
+  X4 = rnorm(n)
+)
+# True relationship: X4 = 0.5*X1 + 0.5*X2 + 0.3*X3 + noise
+df$X4 <- 0.5 * df$X1 + 0.5 * df$X2 + 0.3 * df$X3 + rnorm(n, sd = 0.5)
+df$G1 <- factor(rbinom(n, 1, plogis(0.3 * df$X1)))
+df$G2 <- factor(rbinom(n, 1, plogis(0.3 * df$X2)))
+
+# Add 15% contamination: large shift in X1 and X2
+idx <- sample(n, 75)
+df$X1[idx] <- df$X1[idx] + 8
+df$X2[idx] <- df$X2[idx] + 8
+df$G1[idx] <- factor(1 - as.integer(df$G1[idx]) + 1)
+
+# Store clean version
+df_clean <- df
+df_clean$X1[idx] <- df_clean$X1[idx] - 8
+df_clean$X2[idx] <- df_clean$X2[idx] - 8
+
+# Compare: robust vs non-robust synthesis (10 reps averaged)
+true_coef <- c(X1 = 0.5, X2 = 0.5, X3 = 0.3)  # true betas for X4 model
+rmse_mm <- rmse_ols <- cor_mm <- cor_ols <- numeric(10)
+for (r in 1:10) {
+  s_mm  <- robsynth(df, seed = r)$synth
+  s_ols <- robsynth(df, method = "parametric", seed = r)$synth
+  # Regression on synthetic data vs true coefficients
+  fit_mm  <- coef(lm(X4 ~ X1 + X2 + X3, data = s_mm))[c("X1","X2","X3")]
+  fit_ols <- coef(lm(X4 ~ X1 + X2 + X3, data = s_ols))[c("X1","X2","X3")]
+  rmse_mm[r]  <- sqrt(mean((fit_mm - true_coef)^2))
+  rmse_ols[r] <- sqrt(mean((fit_ols - true_coef)^2))
+  # Correlation preservation
+  cor_mm[r]  <- sqrt(sum((cor(df_clean[,1:4]) - cor(s_mm[,1:4]))^2))
+  cor_ols[r] <- sqrt(sum((cor(df_clean[,1:4]) - cor(s_ols[,1:4]))^2))
+}
+
+cat("                RMSE-beta  Corr Frobenius\n")
+cat(sprintf("MM (robust):    %.4f     %.4f\n", mean(rmse_mm), mean(cor_mm)))
+cat(sprintf("OLS:            %.4f     %.4f\n", mean(rmse_ols), mean(cor_ols)))
+cat(sprintf("MM advantage:   %.0f%%        %.0f%%\n",
+            100 * (1 - mean(rmse_mm)/mean(rmse_ols)),
+            100 * (1 - mean(cor_mm)/mean(cor_ols))))
+```
+
+Under 15% contamination with large leverage shifts (+8 SD in X1 and
+X2), MM synthesis preserves both regression coefficients and correlation
+structure significantly better than OLS.  The contaminated observations
+pull OLS regression slopes toward zero (attenuation bias), while MM
+downweights them and recovers the true conditional relationships.
+
+## Basic usage
+
+```{r basic}
+# Default: robust synthesis (MM + weighted logistic)
+res <- robsynth(df, seed = 1)
+print(res)
+```
+
+The result stores both the synthetic data (`res$synth`) and the original
+(`res$original`) for convenient downstream analysis.
+
+## Per-variable methods
+
+Mix robust and non-robust methods as needed:
+
+```{r pervar}
+res2 <- robsynth(df,
+  method = c(X1 = "mm", X2 = "robust_rf", X3 = "robust_xgboost",
+             X4 = "mm", G1 = "robust_logreg", G2 = "polyreg"),
+  seed = 1)
+res2$method
+```
+
+Available methods:
+
+| Method | Type | Robustness |
+|--------|------|-----------|
+| `"mm"` | Continuous (default) | MM-estimation, 50% breakdown |
+| `"robust_cart"` | Both | Median leaves + MAD scale |
+| `"robust_rf"` | Both | Weighted by y-outlier distance |
+| `"robust_xgboost"` | Both | Pseudo-Huber loss |
+| `"robust_logreg"` | Categorical (default) | Huber-weighted logistic |
+| `"norm"` | Continuous | Standard OLS (no robustness) |
+| `"cart"` / `"ctree"` | Both | Standard trees |
+| `"logreg"` / `"polyreg"` | Categorical | Standard logistic/multinomial |
+| `"sample"` | Both | Marginal resampling |
+| `"passive"` | Derived | Deterministic formula |
+
+**Note:** MM-estimation assumes approximately symmetric conditional
+errors.  For heavily skewed variables, apply a transformation first
+(see next section).
+
+## Transformations for skewed variables
+
+```{r transform}
+# Add an income-like variable (right-skewed) for this demo
+df$income <- rlnorm(n, 10, 0.5)
+df$income[idx] <- df$income[idx] * 10
+
+# Robust Box-Cox normalizes before synthesis, back-transforms after
+res3 <- robsynth(df, transform = list(income = "boxcox"), seed = 1)
+cat("Estimated lambda:", res3$transform_info$income$lambda, "\n")
+# Lambda near 0 = log-transform (expected for lognormal data)
+```
+
+The lambda parameter is estimated by minimizing a robust skewness
+criterion (`|mean - median| / MAD`), which is itself resistant to the
+outliers that motivate the transformation.
+
+## Custom formulas and visit sequence
+
+```{r formulas}
+res4 <- robsynth(df,
+  visit.sequence = c("G1", "G2", "X1", "X2", "X3", "X4", "income"),
+  formulas = list(X3 = ~ X1 * X2 + G1),
+  transform = list(income = "log"),
+  seed = 1)
+```
+
+## Multiple synthesis with combining rules
+
+Generate `m > 1` synthetic copies for valid statistical inference:
+
+```{r multi}
+res5 <- robsynth(df[, 1:6], m = 5, seed = 1)
+
+# Fit a model on the synthetic data with Reiter (2003) combining rules
+# (NOT Rubin's rules -- the variance formula differs for synthetic data)
+fit <- synth_lm(X1 ~ X2 + X3 + G1, res5)
+data.frame(
+  coef = round(fit$coefficients, 4),
+  se   = round(fit$se, 4),
+  df   = round(fit$df, 1)
+)
+```
+
+## Utility assessment
+
+```{r utility}
+u <- utility(res)
+print(u)
+```
+
+Interpretation:
+
+- **pMSE** near 0: synthetic data is hard to distinguish from original
+- **Mean KS** < 0.05: marginal distributions well preserved
+- **Correlation** < 0.1: joint structure well preserved
+- **CI overlap** near 1: inferential conclusions preserved
+
+## Model-based comparison
+
+Compare a specific regression analysis on original vs synthetic:
+
+```{r compare_fit}
+comp <- compare_fit(X1 ~ X2 + X3 + G1, res, df, plot = FALSE)
+print(comp)
+```
+
+A mean CI overlap above 0.5 and mean |standardized difference| below 2
+indicate acceptable preservation for most applications.
+
+## Visual comparison
+
+```{r compare_plot, fig.height = 5}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  compare(res, df)
+}
+```
+
+## Disclosure risk
+
+Assess whether a random-forest attacker could infer sensitive attributes
+from the synthetic data:
+
+```{r disclosure}
+d <- disclosure(res, df,
+  key_vars = c("X1", "G1"),
+  target_var = "X2",
+  method = "distance")
+print(d)
+```
+
+Interpretation of distance-based risk:
+
+- **Median distance** > 1.0: low risk (synthetic records are far from
+  originals)
+- **5th percentile** > 0.3: even the closest matches are reasonably
+  distant
+- **% below threshold** < 10%: few records at high disclosure risk
+
+When the `riskutility` package is installed, RAPID (Thees, Mueller &
+Templ, 2025) provides a model-based risk measure using the proportion of
+records whose sensitive attribute can be predicted within 10% error.
+
+## Hierarchical data (household/person)
+
+For survey data with nested structures:
+
+```{r hierarchical}
+set.seed(1)
+hh <- data.frame(
+  hhid      = rep(1:100, each = 3),
+  hh_income = rep(rnorm(100, 5000, 1000), each = 3),
+  region    = factor(rep(sample(c("A", "B"), 100, TRUE), each = 3)),
+  age       = rnorm(300, 40, 15),
+  sex       = factor(sample(c("M", "F"), 300, TRUE))
+)
+# Add household-level outliers
+hh$hh_income[1:15] <- hh$hh_income[1:15] + 8000
+
+res_hh <- suppressMessages(
+  robsynth_hh(hh, hhid = "hhid",
+              hh_vars = c("hh_income", "region"),
+              person_vars = c("age", "sex"),
+              seed = 1)
+)
+print(res_hh)
+
+# Verify: household sizes preserved
+all(table(res_hh$synth$hhid) == 3)
+```
+
+Phase 1 resamples complete households (preserving within-household
+composition), Phase 2 synthesizes person-level variables conditional on
+household context.
+
+## Survey weights
+
+Design weights from complex sampling are passed to all model fits:
+
+```{r weights}
+df_w <- df[, 1:6]
+df_w$sampweight <- runif(nrow(df_w), 1, 10)
+
+res_w <- robsynth(df_w, weights = "sampweight", seed = 1)
+# Weight column used for fitting but not synthesized
+names(res_w$synth)
+```
+
+Note: survey weights modify the estimation objective.  Point estimates
+are approximately design-consistent, but standard errors from the
+weighted lmrob are not fully design-corrected.
+
+## Parallel computation
+
+When generating many synthetic copies, distribute across cores:
+
+```{r parallel, eval = FALSE}
+res_par <- robsynth(df, m = 20, n_cores = 4, seed = 1)
+```
+
+## Comparison with synthpop
+
+| Feature | synthpop | robSynth |
+|---------|----------|----------|
+| Default method | CART | MM-estimation |
+| Robustness | None | Bounded influence |
+| Per-variable methods | Yes | Yes |
+| Custom formulas | Via `passive` | Direct `formulas` argument |
+| Multiple synthesis | Yes | Yes (+ `synth_lm()`) |
+| Hierarchical data | Limited (`nested`) | Yes (`robsynth_hh()`) |
+| Survey weights | No | Yes |
+| Disclosure risk | Yes (CAP/TCAP) | Yes (RAPID) |
+| CRAN | Yes | Planned |
+
+**Migration from synthpop:**
+
+```{r migration, eval = FALSE}
+# synthpop:
+library(synthpop)
+syn(data, method = "cart", m = 5)
+
+# robSynth equivalent (non-robust, same behavior):
+robsynth(data, method = "cart", m = 5)
+
+# robSynth default (robust):
+robsynth(data, m = 5)
+```
+
+## Citation
+
+```
+Templ, M. (2026). Robust synthetic data generation: protecting data
+quality from contaminated training data. Submitted.
+```
